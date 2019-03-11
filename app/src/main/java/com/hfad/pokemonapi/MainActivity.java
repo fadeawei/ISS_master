@@ -8,8 +8,13 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.MapView;
-import com.google.android.gms.maps.model.Marker;
+
+import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapController;
+import org.osmdroid.views.MapView;
 
 import java.util.List;
 
@@ -24,21 +29,12 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView latitude;
     private TextView longitude;
-    private MapView mapView;
-    private TextView latitudeText;
-    private TextView longitudeText;
 
-    MapView map = null;
+    private MapView map;
+    private MapController mapController;
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        GeoPoint geo = new GeoPoint(latitude, longitude);
-        geo.
-
-                Marker startMarker = new Marker(map);
-        startMarker.setPosition();
-        startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM);
-        map.getOverlays().add(startMarker);
 
         //handle permissions first, before map is created. not depicted here
 
@@ -54,15 +50,18 @@ public class MainActivity extends AppCompatActivity {
         //inflate and create the map
         setContentView(R.layout.activity_main);
 
-        map = (MapView) findViewById(R.id.map);
+        map = this.findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
-        wireWidgets();
-        getCoordinates();
+        IMapController mapController = map.getController();
+        mapController.setZoom(9.5);
+        GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
+        mapController.setCenter(startPoint);
 
-        public void onResume(){
+
+        /*public void onResume(){
             super.onResume();
             //this will refresh the osmdroid configuration on resuming.
             //if you make changes to the configuration, use
@@ -78,10 +77,15 @@ public class MainActivity extends AppCompatActivity {
             //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             //Configuration.getInstance().save(this, prefs);
             map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
-        }
+        }*/
+
+
+        wireWidgets();
+        getCoordinates();
 
 
     }
+
 
     private void getCoordinates() {
         Retrofit retrofit = new Retrofit.Builder()
@@ -93,11 +97,15 @@ public class MainActivity extends AppCompatActivity {
 
         Call<ISStatus> ISSResponseCall = service.GetLocation();
 
+
         ISSResponseCall.enqueue(new Callback<ISStatus>() {
             @Override
             public void onResponse(Call<ISStatus> call, Response<ISStatus> response) {
-                ISS iss_position = response.body().getIss_position();
-                Log.d("ENQUEUE", "onResponse: " + iss_position.toString());
+                    ISS iss_position = response.body().getIss_position();
+                    latitude.setText("Latitude: " + iss_position.getLatitude());
+                    longitude.setText("Longitude: " + iss_position.getLongitude());
+                    Log.d("ENQUEUE", "onResponse: " + iss_position.toString());
+
             }
 
             @Override
@@ -106,17 +114,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-            latitudeText.setText("Latitude: " + latitude);
-            longitudeText.setText("Longitude: " + longitude);
+
 
         }
 
-    }
+
 
 
     private void wireWidgets() {
         latitude = findViewById(R.id.textView_maps_latitude);
         longitude = findViewById(R.id.textView_maps_longitude);
-        mapView = findViewById(R.id.mapView_map);
+        map = findViewById(R.id.map);
     }
 }
