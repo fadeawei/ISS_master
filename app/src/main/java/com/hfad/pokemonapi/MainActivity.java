@@ -17,6 +17,8 @@ import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 import retrofit2.Call;
@@ -55,10 +57,7 @@ public class MainActivity extends AppCompatActivity {
         map.setBuiltInZoomControls(true);
         map.setMultiTouchControls(true);
 
-        IMapController mapController = map.getController();
-        mapController.setZoom(9.5);
-        GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
-        mapController.setCenter(startPoint);
+
 
 
         /*public void onResume(){
@@ -81,7 +80,14 @@ public class MainActivity extends AppCompatActivity {
 
 
         wireWidgets();
-        getCoordinates();
+        Timer timer = new Timer();
+
+        timer.schedule( new TimerTask() {
+            public void run() {
+                getCoordinates();
+            }
+        }, 0, 5000);
+
 
 
     }
@@ -104,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
                     ISS iss_position = response.body().getIss_position();
                     latitude.setText("Latitude: " + iss_position.getLatitude());
                     longitude.setText("Longitude: " + iss_position.getLongitude());
+                IMapController mapController = map.getController();
+                mapController.setZoom(5);
+                GeoPoint startPoint = new GeoPoint(iss_position.getLatitude(), iss_position.getLongitude());
+                mapController.setCenter(startPoint);
                     Log.d("ENQUEUE", "onResponse: " + iss_position.toString());
 
             }
